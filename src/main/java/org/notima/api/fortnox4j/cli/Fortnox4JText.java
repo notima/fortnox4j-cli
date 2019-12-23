@@ -19,11 +19,12 @@ public class Fortnox4JText implements Fortnox4JFormat {
 	// If result should be written to outfile
 	private File	outFile;	
 	
-	public static final int INVOICE_DATE_COL = 1;
-	public static final int DUE_DATE_COL = 2; 
+	public static final int INVOICE_DATE_COL = 2;
+	public static final int DUE_DATE_COL = 3; 
 	
 	public String[] invoiceLineHeaders = new String[] {
 			"InvoiceNo",
+			"InvoiceType",
 			"Inv Date",
 			"Due Date",
 			"Cust No",
@@ -31,8 +32,10 @@ public class Fortnox4JText implements Fortnox4JFormat {
 			"Total",
 			"Balance",
 			"Currency",
+			"TermsOfPayment",
 			"ExtRef1",
-			"ExtRef2"
+			"ExtRef2",
+			"Booked"
 	};
 	
 	protected List<Object[]>	 invoiceReportLines;
@@ -96,6 +99,7 @@ public class Fortnox4JText implements Fortnox4JFormat {
 			reportLine = new Object[invoiceLineHeaders.length];
 			
 			reportLine[col++] = is.getDocumentNumber();
+			reportLine[col++] = is.getInvoiceType();
 			reportLine[col++] = is.getInvoiceDate();
 			reportLine[col++] = is.getDueDate();
 			reportLine[col++] = is.getCustomerNumber();
@@ -103,8 +107,11 @@ public class Fortnox4JText implements Fortnox4JFormat {
 			reportLine[col++] = new Double(is.getTotal());
 			reportLine[col++] = new Double(is.getBalance());
 			reportLine[col++] = is.getCurrency();
+			reportLine[col++] = is.getTermsOfPayment();
 			reportLine[col++] = is.getExternalInvoiceReference1();
 			reportLine[col++] = is.getExternalInvoiceReference2();
+			reportLine[col++] = new Boolean(is.isBooked());
+			
 			
 			count++;
 			invoiceReportLines.add(reportLine);
