@@ -86,9 +86,12 @@ public class Fortnox4Jcli {
 		opts.addOption("s", true, "Client Secret. This is the integrator's secret word.");
 		opts.addOption("a", "apicode", true, "The API-code recieved from the Fortnox client when adding the integration. Must be combined with -s");
 		opts.addOption("t", "accesstoken", true, "The access token to the Fortnox client");
+		opts.addOption("format", true, "Select output format");
 		
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
+		String format = null;
+		Fortnox4JFormat outputFormat = null;
 		
 		try {
 			
@@ -103,6 +106,23 @@ public class Fortnox4Jcli {
 					formatter.printHelp(Fortnox4Jcli.class.getSimpleName(), opts);
 					System.exit(1);
 				}
+			}
+
+			// Check format option
+			if (cmd.hasOption("format")) {
+				format = cmd.getOptionValue("format");
+				format = format.toLowerCase();
+				if (!format.equals("xlsx") && 
+					!format.equals("csv") && 
+					!format.equals("json")) {
+					throw new MissingOptionException("Available formats are: json, xlsx, csv. If format is omitted csv is used."); 
+				}
+				if (format.equalsIgnoreCase("xlsx")) {
+					outputFormat = new Fortnox4JExcel();
+				}
+			}
+			if (outputFormat==null) {
+				outputFormat = new Fortnox4JText();
 			}
 			
 			if (cmd.hasOption("c") || apiCode!=null) {
@@ -142,10 +162,13 @@ public class Fortnox4Jcli {
 					Invoices invoices = client.getInvoices(FortnoxClient3.FILTER_UNPAID);
 					
 					if (invoices!=null && invoices.getInvoiceSubset()!=null) {
-						List<InvoiceSubset> isList = invoices.getInvoiceSubset();
-						for (InvoiceSubset is : isList) {
-							System.out.println(Fortnox4JText.formatInvoiceSubSetToLine(is));
+						
+						outputFormat.reportCustomerInvoicesCompact(invoices);
+						List<StringBuffer> out = outputFormat.writeResult();
+						for (StringBuffer b : out) {
+							System.out.println(b.toString());
 						}
+						
 					} else {
 						System.out.println("No unpaid customer invoices.");
 					}
