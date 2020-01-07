@@ -12,7 +12,14 @@ import org.notima.api.fortnox.entities3.Invoices;
  *
  */
 public interface Fortnox4JFormat {
-
+	
+	/**
+	 * Sets the Fortnox Client for this formatting
+	 * 
+	 * @param fc3
+	 */
+	public void setFortnox4JClient(Fortnox4JClient f4jclient);
+	
 	/**
 	 * Add invoices to report.
 	 * 
@@ -30,6 +37,6 @@ public interface Fortnox4JFormat {
 	 * 				If the result is text, the result is returned as text.
 	 * @throws IOException If something goes wrong.
 	 */
-	public List<StringBuffer>	writeResult() throws IOException;
+	public List<StringBuffer>	writeResult() throws Exception;
 	
 }

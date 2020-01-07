@@ -32,12 +32,10 @@ import org.apache.commons.cli.Options;
 import org.notima.api.fortnox.FortnoxClient3;
 import org.notima.api.fortnox.FortnoxException;
 import org.notima.api.fortnox.clients.FortnoxClientInfo;
-import org.notima.api.fortnox.entities3.InvoiceSubset;
 import org.notima.api.fortnox.entities3.Invoices;
 
 /**
- * 
- * 
+ * This class contains the CLI-parser which in turn calls other methods. 
  * 
  * @author Daniel Tamm
  *
@@ -155,11 +153,11 @@ public class Fortnox4Jcli {
 					
 				} else if (CMD_LISTUNPAID_CUSTOMER_INVOICES.equalsIgnoreCase(cmdLine)) {
 
-					FortnoxClientInfo auth = cli.parseAuthDetails(cmd);
+					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					Fortnox4JClient cl = new Fortnox4JClient(ci);
+					outputFormat.setFortnox4JClient(cl);
 					
-					FortnoxClient3 client = new FortnoxClient3(auth.getAccessToken(), auth.getClientSecret());
-					
-					Invoices invoices = client.getInvoices(FortnoxClient3.FILTER_UNPAID);
+					Invoices invoices = cl.getUnpaidCustomerInvoices();
 					
 					if (invoices!=null && invoices.getInvoiceSubset()!=null) {
 						
@@ -175,11 +173,9 @@ public class Fortnox4Jcli {
 					
 				} else if (CMD_GETCUSTOMERLIST.equalsIgnoreCase(cmdLine)) {
 
-					FortnoxClientInfo auth = cli.parseAuthDetails(cmd);
+					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
 					
-					FortnoxClient3 client = new FortnoxClient3(auth.getAccessToken(), auth.getClientSecret());
-					
-					Fortnox4JClient cl = new Fortnox4JClient(client);
+					Fortnox4JClient cl = new Fortnox4JClient(ci);
 					cl.getCustomerList();
 					
 					

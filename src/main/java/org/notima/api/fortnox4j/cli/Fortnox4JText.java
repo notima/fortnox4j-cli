@@ -9,13 +9,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.notima.api.fortnox.entities3.InvoiceSubset;
-import org.notima.api.fortnox.entities3.Invoices;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.notima.api.fortnox.entities3.InvoiceSubset;
+import org.notima.api.fortnox.entities3.Invoices;
 
 public class Fortnox4JText implements Fortnox4JFormat {
 
+	// The FortnoxClient used for this report
+	protected Fortnox4JClient		fortnox4JClient;	
+	
 	// If result should be written to outfile
 	private File	outFile;	
 	
@@ -75,7 +78,23 @@ public class Fortnox4JText implements Fortnox4JFormat {
 	public void setOutFile(File of) {
 		outFile = of;
 	}
-	
+
+	/**
+	 * Return current Fortnox4JClient
+	 * 
+	 * @return	Current Fortnox4JClient
+	 */
+	public Fortnox4JClient getFortnox4JClient() {
+		return fortnox4JClient;
+	}
+
+	/**
+	 * Sets Fortnox4JClient used to fetch additional information if needed
+	 */
+	public void setFortnox4JClient(Fortnox4JClient fortnox4jClient) {
+		fortnox4JClient = fortnox4jClient;
+	}
+
 	/**
 	 * Create a compact invoice list
 	 * 
@@ -90,6 +109,10 @@ public class Fortnox4JText implements Fortnox4JFormat {
 		if (invoiceReportLines==null) {
 			invoiceReportLines = new ArrayList<Object[]>();
 		}
+
+		// Add header
+		Object[] header = getInvoiceReportHeader();
+		invoiceReportLines.add(header);
 		
 		int count = 0, col = 0;
 		Object[] reportLine;
@@ -116,17 +139,20 @@ public class Fortnox4JText implements Fortnox4JFormat {
 			count++;
 			invoiceReportLines.add(reportLine);
 		}
+
+		
 		return count;
 	}
 
 	@Override
-	public List<StringBuffer> writeResult() throws IOException {
+	public List<StringBuffer> writeResult() throws Exception {
 		
 		List<StringBuffer> result = new ArrayList<StringBuffer>();
 		StringBuffer buf = new StringBuffer();
 		result.add(buf);
 		
 		List<Object[]> rows = invoiceReportLines;
+		
 		
 		CSVPrinter printer = new CSVPrinter(buf, CSVFormat.EXCEL);
 		int rowCount = 0;
