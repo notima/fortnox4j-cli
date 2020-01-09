@@ -9,9 +9,16 @@ import org.notima.api.fortnox.entities3.Customer;
 import org.notima.api.fortnox.entities3.CustomerSubset;
 import org.notima.api.fortnox.entities3.Customers;
 import org.notima.api.fortnox.entities3.Invoices;
+import org.notima.api.fortnox.entities3.Supplier;
+import org.notima.piggyback.FieldRider;
+import org.notima.piggyback.FieldRiderKeyValuePair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Fortnox4JClient {
 
+	protected Logger	log = LoggerFactory.getLogger(Fortnox4JClient.class);	
+	
 	private FortnoxClient3		client;
 	private FortnoxClientInfo	clientInfo;
 	
@@ -49,6 +56,46 @@ public class Fortnox4JClient {
 		clientInfo.setCompanySetting(companySetting);
 	}
 
+	/**
+	 * Writes a setting to supplier
+	 * 
+	 * @param orgNo
+	 * @param key
+	 * @param value
+	 * @return	The supplier if successful. Null if supplier is not found.
+	 * @throws Exception 
+	 */
+	public Supplier writeSettingToSupplier(String orgNo, String key, String value) throws Exception {
+		
+		Supplier supplier = client.getSupplierByTaxId(orgNo, true);
+		if (supplier==null) {
+			log.warn("Supplier with tax id {} doesn't exist.", orgNo);
+			return null;
+		}
+		
+		String comment = supplier.getComments();
+		
+		// Scan for settings in comments
+		FieldRider rider = new FieldRider(comment);
+		FieldRiderKeyValuePair kvp = rider.lookupKeyValuePair(key);
+		if (kvp==null) {
+			// The key doesn't yet exist.
+			kvp = new FieldRiderKeyValuePair(key, value);
+			rider.addKeyValuePair(kvp);
+		} else {
+			// Update the value
+			kvp.setValue(value);
+		}
+
+		// Save the setting
+		StringBuffer newContent = rider.updateContent();
+		supplier.setComments(newContent.toString());
+		
+		supplier = client.setSupplier(supplier, false);
+		
+		return supplier;
+	}
+	
 	/**
 	 * Returns a list of unpaid customer invoices
 	 * 
