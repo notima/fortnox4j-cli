@@ -1,17 +1,20 @@
 package org.notima.api.fortnox4j.cli;
 
+import java.io.PrintStream;
 import java.util.List;
 
+import javax.xml.bind.JAXB;
+
+import org.notima.api.fortnox.Fortnox4JSettings;
 import org.notima.api.fortnox.FortnoxClient3;
 import org.notima.api.fortnox.clients.FortnoxClientInfo;
 import org.notima.api.fortnox.entities3.CompanySetting;
 import org.notima.api.fortnox.entities3.Customer;
 import org.notima.api.fortnox.entities3.CustomerSubset;
 import org.notima.api.fortnox.entities3.Customers;
+import org.notima.api.fortnox.entities3.Invoice;
 import org.notima.api.fortnox.entities3.Invoices;
 import org.notima.api.fortnox.entities3.Supplier;
-import org.notima.piggyback.FieldRider;
-import org.notima.piggyback.FieldRiderKeyValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,9 +62,9 @@ public class Fortnox4JClient {
 	/**
 	 * Writes a setting to supplier
 	 * 
-	 * @param orgNo
-	 * @param key
-	 * @param value
+	 * @param orgNo				Org number of supplier
+	 * @param key				The key of the setting.
+	 * @param value				The value of the setting.
 	 * @return	The supplier if successful. Null if supplier is not found.
 	 * @throws Exception 
 	 */
@@ -73,27 +76,26 @@ public class Fortnox4JClient {
 			return null;
 		}
 		
-		String comment = supplier.getComments();
+		Fortnox4JSettings settings = new Fortnox4JSettings(client);
 		
-		// Scan for settings in comments
-		FieldRider rider = new FieldRider(comment);
-		FieldRiderKeyValuePair kvp = rider.lookupKeyValuePair(key);
-		if (kvp==null) {
-			// The key doesn't yet exist.
-			kvp = new FieldRiderKeyValuePair(key, value);
-			rider.addKeyValuePair(kvp);
-		} else {
-			// Update the value
-			kvp.setValue(value);
-		}
+		return settings.writeSettingToSupplierByOrgNo(orgNo, key, value);
+		
+	}
+	
 
-		// Save the setting
-		StringBuffer newContent = rider.updateContent();
-		supplier.setComments(newContent.toString());
+	/**
+	 * Returns a specific invoice
+	 * 
+	 * @param invoiceNo
+	 * @return
+	 * @throws Exception
+	 */
+	public Invoice printInvoice(PrintStream os, String invoiceNo) throws Exception {
 		
-		supplier = client.setSupplier(supplier, false);
+		Invoice result = client.getInvoice(invoiceNo);
+		JAXB.marshal(result, os);
+		return result;
 		
-		return supplier;
 	}
 	
 	/**
@@ -107,7 +109,7 @@ public class Fortnox4JClient {
 		return result;
 	}
 	
-	public void getCustomerList() throws Exception {
+	public void getCustomerList(PrintStream os) throws Exception {
 
 		Customers customers = client.getCustomers();
 		List<CustomerSubset> cslist = customers.getCustomerSubset();
@@ -117,7 +119,7 @@ public class Fortnox4JClient {
 		for (CustomerSubset cs : cslist) {
 			
 			customer = client.getCustomerByCustNo(cs.getCustomerNumber());
-			System.out.println(printCustomerDetails(customer));
+			os.println(printCustomerDetails(customer));
 			
 		}
 		

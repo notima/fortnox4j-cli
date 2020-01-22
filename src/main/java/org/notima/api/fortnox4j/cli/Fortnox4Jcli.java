@@ -1,5 +1,9 @@
 package org.notima.api.fortnox4j.cli;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+
 /**
  * CLI for communicating with Fortnox.
  * 
@@ -84,12 +88,16 @@ public class Fortnox4Jcli {
 		opts.addOption("s", true, "Client Secret. This is the integrator's secret word.");
 		opts.addOption("a", "apicode", true, "The API-code recieved from the Fortnox client when adding the integration. Must be combined with -s");
 		opts.addOption("t", "accesstoken", true, "The access token to the Fortnox client");
+		opts.addOption("i", "invoiceno", true, "Get invoice with No");
+		opts.addOption("o", "outfile", true, "Redirect output to file");
 		opts.addOption("format", true, "Select output format");
 		
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
 		String format = null;
 		Fortnox4JFormat outputFormat = null;
+		
+		PrintStream os = System.out;
 		
 		try {
 			
@@ -100,12 +108,17 @@ public class Fortnox4Jcli {
 			if (cmd.hasOption("a")) {
 				apiCode = cmd.getOptionValue("a");
 			} else {
-				if (!cmd.hasOption("c")) {
+				if (!cmd.hasOption("c") && !cmd.hasOption("i")) {
 					formatter.printHelp(Fortnox4Jcli.class.getSimpleName(), opts);
 					System.exit(1);
 				}
 			}
 
+			if (cmd.hasOption("o")) {
+				File destinationFile = new File(cmd.getOptionValue("o"));
+				os = new PrintStream(new FileOutputStream(destinationFile));
+			}
+			
 			// Check format option
 			if (cmd.hasOption("format")) {
 				format = cmd.getOptionValue("format");
@@ -123,9 +136,10 @@ public class Fortnox4Jcli {
 				outputFormat = new Fortnox4JText();
 			}
 			
-			if (cmd.hasOption("c") || apiCode!=null) {
+			if (cmd.hasOption("c") || apiCode!=null || cmd.hasOption("i")) {
 				
 				cmdLine = cmd.getOptionValue("c");
+				
 				if (CMD_GETACCESSTOKEN.equalsIgnoreCase(cmdLine) || apiCode!=null) {
 				
 					String clientSecret = null;
@@ -145,8 +159,8 @@ public class Fortnox4Jcli {
 					FortnoxClient3 client = new FortnoxClient3();
 					try {
 						String accessToken = client.getAccessToken(apiCode, clientSecret);
-						System.out.println("Got access token:");
-						System.out.println(accessToken);
+						os.println("Got access token:");
+						os.println(accessToken);
 					} catch (FortnoxException fe) {
 						System.err.println(fe.toString());
 					}
@@ -164,7 +178,7 @@ public class Fortnox4Jcli {
 						outputFormat.reportCustomerInvoicesCompact(invoices);
 						List<StringBuffer> out = outputFormat.writeResult();
 						for (StringBuffer b : out) {
-							System.out.println(b.toString());
+							os.println(b.toString());
 						}
 						
 					} else {
@@ -176,8 +190,14 @@ public class Fortnox4Jcli {
 					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
 					
 					Fortnox4JClient cl = new Fortnox4JClient(ci);
-					cl.getCustomerList();
+					cl.getCustomerList(os);
+
+				} else if (cmd.hasOption("i")) {
 					
+					String invoiceNo = cmd.getOptionValue("i");
+					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					Fortnox4JClient cl = new Fortnox4JClient(ci);
+					cl.printInvoice(os, invoiceNo);
 					
 				} else {
 					System.out.println("Unknown command: " + cmdLine);
