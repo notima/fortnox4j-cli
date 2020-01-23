@@ -37,6 +37,16 @@ public class Fortnox4JClient {
 		
 	}
 	
+	public FortnoxClient3 getClient() {
+		return client;
+	}
+
+	public void setClient(FortnoxClient3 client) {
+		this.client = client;
+	}
+
+
+
 	/**
 	 * Gets company settings for this client
 	 * 

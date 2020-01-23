@@ -19,9 +19,17 @@ public interface Fortnox4JFormat {
 	 * @param fc3
 	 */
 	public void setFortnox4JClient(Fortnox4JClient f4jclient);
-	
+
 	/**
 	 * Add invoices to report.
+	 * 
+	 * @param invoices
+	 * @return		The number of invoices added
+	 */
+	public int reportCustomerInvoices(Invoices invoices) throws Exception;
+	
+	/**
+	 * Add invoices to compact report.
 	 * 
 	 * @param invoices
 	 * @return		The number of invoices added

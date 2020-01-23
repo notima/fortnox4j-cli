@@ -175,7 +175,7 @@ public class Fortnox4Jcli {
 					
 					if (invoices!=null && invoices.getInvoiceSubset()!=null) {
 						
-						outputFormat.reportCustomerInvoicesCompact(invoices);
+						outputFormat.reportCustomerInvoices(invoices);
 						List<StringBuffer> out = outputFormat.writeResult();
 						for (StringBuffer b : out) {
 							os.println(b.toString());

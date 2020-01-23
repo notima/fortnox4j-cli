@@ -27,7 +27,7 @@ public class Fortnox4JExcel extends Fortnox4JText {
 	public final static String	defaultDateFormatStr = "yyyy-MM-dd"; 
 	public final static String defaultFileName = "reconciliation-report";
 	
-	public static Integer[] colWidthInvoiceLines = new Integer[] {
+	public static Integer[] colWidthInvoiceLinesCompact = new Integer[] {
 		12*256,		// Fortnox Invoice Id
 		12*256,		// Invoice Date
 		12*256,		// Due Date 
@@ -36,9 +36,27 @@ public class Fortnox4JExcel extends Fortnox4JText {
 		40*256,		// Total
 		30*256,		// Balance
 		null,		// Currency
+		null,		// Terms of Payment
 		20*256,		// ExtRef1
 		20*256		// ExtRef2
 	};
+	
+	public static Integer[] colWidthInvoiceLines = new Integer[] {
+			12*256,		// Fortnox Invoice Id
+			12*256,		// Invoice Date
+			12*256,		// Due Date 
+			null,		// Customer No
+			null,		// Customer Name
+			40*256,		// Total
+			30*256,		// Balance
+			null,		// Currency
+			null,		// Terms of Payment
+			20*256,		// Order reference
+			null,		// Your order number
+			20*256,		// ExtRef1
+			20*256		// ExtRef2
+		};
+	
 	
 	private int rowNum;
 	private int colNum;
@@ -200,6 +218,11 @@ public class Fortnox4JExcel extends Fortnox4JText {
 	 */
 	private void createHeader(Sheet sh, Object[] columnHeaders) {
 
+		Integer[] colWidths = colWidthInvoiceLinesCompact;
+		if (columnHeaders.length>colWidthInvoiceLinesCompact.length) {
+			colWidths = colWidthInvoiceLines;
+		}
+		
 		colNum = 0;
 		row = sh.createRow(rowNum++);
 		row.setHeightInPoints(40);
@@ -209,8 +232,8 @@ public class Fortnox4JExcel extends Fortnox4JText {
 			cell.setCellValue((String)c);
 			
 			// Set column width if specified
-			if (colWidthInvoiceLines.length>(colNum-1) && colWidthInvoiceLines[colNum-1]!=null) {
-				sh.setColumnWidth(colNum-1, colWidthInvoiceLines[colNum-1]);
+			if (colWidths.length>(colNum-1) && colWidths[colNum-1]!=null) {
+				sh.setColumnWidth(colNum-1, colWidths[colNum-1]);
 			}
 		}
 		
