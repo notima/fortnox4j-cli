@@ -1,6 +1,7 @@
 package org.notima.api.fortnox4j.cli;
 
 import java.io.PrintStream;
+import java.util.Date;
 import java.util.List;
 
 import javax.xml.bind.JAXB;
@@ -104,6 +105,24 @@ public class Fortnox4JClient {
 		
 		Invoice result = client.getInvoice(invoiceNo);
 		JAXB.marshal(result, os);
+		return result;
+		
+	}
+
+	/**
+	 * Returns a list of invoices with invoice date in given date.
+	 * 
+	 * @param fromDate
+	 * @param untilDate
+	 * @return		An Invoices struct.
+	 */
+	public Invoices getAllCustomerInvoicesByDateRange(Date fromDate, Date untilDate) throws Exception {
+		
+		String filter = "fromdate=" + FortnoxClient3.s_dfmt.format(fromDate);
+		if (untilDate!=null) {
+			filter += "&todate=" + FortnoxClient3.s_dfmt.format(untilDate);
+		}
+		Invoices result = client.getInvoices(filter);
 		return result;
 		
 	}

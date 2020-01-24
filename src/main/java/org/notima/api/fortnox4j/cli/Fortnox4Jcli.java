@@ -3,6 +3,7 @@ package org.notima.api.fortnox4j.cli;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.Date;
 
 /**
  * CLI for communicating with Fortnox.
@@ -49,6 +50,7 @@ public class Fortnox4Jcli {
 	public static final String CMD_GETACCESSTOKEN = "getAccessToken";
 	public static final String CMD_GETCUSTOMERLIST = "getCustomerList";
 	public static final String CMD_LISTUNPAID_CUSTOMER_INVOICES = "listUnpaidCustomerInvoices";
+	public static final String CMD_LIST_ALL_CUSTOMER_INVOICES = "listCustomerInvoices";
 	
 	/**
 	 * Parse auth details from command line.
@@ -84,12 +86,15 @@ public class Fortnox4Jcli {
 		Fortnox4Jcli cli = new Fortnox4Jcli();
 		
 		Options opts = new Options();
-		opts.addOption("c", "cmd", true, "Command. Available commands: getAccessToken, getCustomerList, listUnpaidCustomerInvoices");
+		opts.addOption("c", "cmd", true, "Command. Available commands: getAccessToken, getCustomerList, listUnpaidCustomerInvoices, listCustomerInvoices");
 		opts.addOption("s", true, "Client Secret. This is the integrator's secret word.");
 		opts.addOption("a", "apicode", true, "The API-code recieved from the Fortnox client when adding the integration. Must be combined with -s");
 		opts.addOption("t", "accesstoken", true, "The access token to the Fortnox client");
 		opts.addOption("i", "invoiceno", true, "Get invoice with No");
 		opts.addOption("o", "outfile", true, "Redirect output to file");
+		opts.addOption("d", "fromdate", true, "Set from date");
+		opts.addOption("untildate", true, "Set until date");
+		opts.addOption("enrich", "Try to enrich information as much as possible, ie long format");
 		opts.addOption("format", true, "Select output format");
 		
 		CommandLineParser parser = new DefaultParser();
@@ -98,6 +103,9 @@ public class Fortnox4Jcli {
 		Fortnox4JFormat outputFormat = null;
 		
 		PrintStream os = System.out;
+		
+		Date fromDate = null;
+		Date untilDate = null;
 		
 		try {
 			
@@ -114,6 +122,14 @@ public class Fortnox4Jcli {
 				}
 			}
 
+			if (cmd.hasOption("d")) {
+				fromDate = FortnoxClient3.s_dfmt.parse(cmd.getOptionValue("d"));
+			}
+			
+			if (cmd.hasOption("untildate")) {
+				untilDate = FortnoxClient3.s_dfmt.parse(cmd.getOptionValue("untildate"));
+			}
+			
 			if (cmd.hasOption("o")) {
 				File destinationFile = new File(cmd.getOptionValue("o"));
 				os = new PrintStream(new FileOutputStream(destinationFile));
@@ -174,8 +190,12 @@ public class Fortnox4Jcli {
 					Invoices invoices = cl.getUnpaidCustomerInvoices();
 					
 					if (invoices!=null && invoices.getInvoiceSubset()!=null) {
-						
-						outputFormat.reportCustomerInvoices(invoices);
+
+						if (cmd.hasOption("enrich")) {
+							outputFormat.reportCustomerInvoices(invoices);
+						} else {
+							outputFormat.reportCustomerInvoicesCompact(invoices);
+						}
 						List<StringBuffer> out = outputFormat.writeResult();
 						for (StringBuffer b : out) {
 							os.println(b.toString());
@@ -183,6 +203,34 @@ public class Fortnox4Jcli {
 						
 					} else {
 						System.out.println("No unpaid customer invoices.");
+					}
+				} else if (CMD_LIST_ALL_CUSTOMER_INVOICES.equalsIgnoreCase(cmdLine)) {
+					
+					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					Fortnox4JClient cl = new Fortnox4JClient(ci);
+					outputFormat.setFortnox4JClient(cl);
+					
+					if (fromDate==null) {
+						System.out.println("Parameter --fromdate is missing");
+						System.exit(1);
+					}
+					
+					Invoices invoices = cl.getAllCustomerInvoicesByDateRange(fromDate, untilDate);
+					
+					if (invoices!=null && invoices.getInvoiceSubset()!=null) {
+
+						if (cmd.hasOption("enrich")) {
+							outputFormat.reportCustomerInvoices(invoices);
+						} else {
+							outputFormat.reportCustomerInvoicesCompact(invoices);
+						}
+						List<StringBuffer> out = outputFormat.writeResult();
+						for (StringBuffer b : out) {
+							os.println(b.toString());
+						}
+						
+					} else {
+						System.out.println("No customer invoices in given date range.");
 					}
 					
 				} else if (CMD_GETCUSTOMERLIST.equalsIgnoreCase(cmdLine)) {
