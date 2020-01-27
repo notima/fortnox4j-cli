@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.notima.api</groupId>
 	<artifactId>fortnox4j-cli</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>Fortnox4J Command Line Interface</name>
 	<description>Simple CLI for interacting with Fortnox.</description>
 	<url>https://github.com/notima/fortnox4j-cli</url>
@@ -32,7 +32,7 @@
 		<dependency>
 			<groupId>org.notima.api</groupId>
 			<artifactId>fortnox4j</artifactId>
-			<version>1.8.7-SNAPSHOT</version>
+			<version>1.8.7</version>
 		</dependency>
 
 		<dependency>
@@ -61,12 +61,6 @@
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml-schemas</artifactId>
 			<version>4.1.1</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.notima</groupId>
-			<artifactId>piggyback-tools</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>

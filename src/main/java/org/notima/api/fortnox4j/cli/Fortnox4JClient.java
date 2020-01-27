@@ -108,35 +108,6 @@ public class Fortnox4JClient {
 		return result;
 		
 	}
-
-	/**
-	 * Returns a list of invoices with invoice date in given date.
-	 * 
-	 * @param fromDate
-	 * @param untilDate
-	 * @return		An Invoices struct.
-	 */
-	public Invoices getAllCustomerInvoicesByDateRange(Date fromDate, Date untilDate) throws Exception {
-		
-		String filter = "fromdate=" + FortnoxClient3.s_dfmt.format(fromDate);
-		if (untilDate!=null) {
-			filter += "&todate=" + FortnoxClient3.s_dfmt.format(untilDate);
-		}
-		Invoices result = client.getInvoices(filter);
-		return result;
-		
-	}
-	
-	/**
-	 * Returns a list of unpaid customer invoices
-	 * 
-	 * @return	A list of unpaid customer invoices.
-	 * @throws Exception	if something goes wrong
-	 */
-	public Invoices getUnpaidCustomerInvoices() throws Exception {
-		Invoices result = client.getInvoices(FortnoxClient3.FILTER_UNPAID);
-		return result;
-	}
 	
 	public void getCustomerList(PrintStream os) throws Exception {
 

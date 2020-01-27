@@ -36,6 +36,7 @@ import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.Options;
 import org.notima.api.fortnox.FortnoxClient3;
 import org.notima.api.fortnox.FortnoxException;
+import org.notima.api.fortnox.FortnoxUtil;
 import org.notima.api.fortnox.clients.FortnoxClientInfo;
 import org.notima.api.fortnox.entities3.Invoices;
 
@@ -51,6 +52,7 @@ public class Fortnox4Jcli {
 	public static final String CMD_GETCUSTOMERLIST = "getCustomerList";
 	public static final String CMD_LISTUNPAID_CUSTOMER_INVOICES = "listUnpaidCustomerInvoices";
 	public static final String CMD_LIST_ALL_CUSTOMER_INVOICES = "listCustomerInvoices";
+	public static final String CMD_COPY_INVOICES = "copyInvoices";
 	
 	/**
 	 * Parse auth details from command line.
@@ -80,16 +82,51 @@ public class Fortnox4Jcli {
 		
 	}
 	
+	/**
+	 * Parse destination auth details from command line.
+	 * 
+	 * @param cmd
+	 * @return	An auth object with clientSecret and accessToken.
+	 */
+	private FortnoxClientInfo parseDestAuthDetails(CommandLine cmd) {
+		
+		FortnoxClientInfo auth = new FortnoxClientInfo();
+
+		if (cmd.hasOption("destsecret")) {
+			auth.setClientSecret(cmd.getOptionValue("destsecret"));
+		} else {
+			if (cmd.hasOption("s")) {
+				auth.setClientSecret(cmd.getOptionValue("s"));
+			} else {
+				System.out.println("Client secret must be supplied. Use option s.");
+				System.exit(1);
+			}
+		}
+		
+		if (cmd.hasOption("destaccesstoken")) {
+			auth.setAccessToken(cmd.getOptionValue("destaccesstoken"));
+		} else {
+			System.out.println("Destination Access Token must be supplied. Use option -destaccesstoken.");
+			System.exit(1);
+		}
+
+		return auth;
+		
+	}
+	
+	
 	
 	public static void main(String[] args) {
 
 		Fortnox4Jcli cli = new Fortnox4Jcli();
 		
 		Options opts = new Options();
-		opts.addOption("c", "cmd", true, "Command. Available commands: getAccessToken, getCustomerList, listUnpaidCustomerInvoices, listCustomerInvoices");
+		opts.addOption("c", "cmd", true, "Command. Available commands: getAccessToken, getCustomerList, listUnpaidCustomerInvoices, listCustomerInvoices copyInvoices");
 		opts.addOption("s", true, "Client Secret. This is the integrator's secret word.");
 		opts.addOption("a", "apicode", true, "The API-code recieved from the Fortnox client when adding the integration. Must be combined with -s");
 		opts.addOption("t", "accesstoken", true, "The access token to the Fortnox client");
+		opts.addOption("destsecret", true, "Destination secret in transfer operations if different from source secret");
+		opts.addOption("destaccesstoken", true, "Destination access token in transfer operations");
 		opts.addOption("i", "invoiceno", true, "Get invoice with No");
 		opts.addOption("o", "outfile", true, "Redirect output to file");
 		opts.addOption("d", "fromdate", true, "Set from date");
@@ -187,7 +224,7 @@ public class Fortnox4Jcli {
 					Fortnox4JClient cl = new Fortnox4JClient(ci);
 					outputFormat.setFortnox4JClient(cl);
 					
-					Invoices invoices = cl.getUnpaidCustomerInvoices();
+					Invoices invoices = cl.getClient().getUnpaidCustomerInvoices();
 					
 					if (invoices!=null && invoices.getInvoiceSubset()!=null) {
 
@@ -215,7 +252,7 @@ public class Fortnox4Jcli {
 						System.exit(1);
 					}
 					
-					Invoices invoices = cl.getAllCustomerInvoicesByDateRange(fromDate, untilDate);
+					Invoices invoices = cl.getClient().getAllCustomerInvoicesByDateRange(fromDate, untilDate);
 					
 					if (invoices!=null && invoices.getInvoiceSubset()!=null) {
 
@@ -232,6 +269,27 @@ public class Fortnox4Jcli {
 					} else {
 						System.out.println("No customer invoices in given date range.");
 					}
+					
+				} else if (CMD_COPY_INVOICES.equalsIgnoreCase(cmdLine)) {
+
+					if (fromDate==null) {
+						System.out.println("Parameter --fromdate is missing");
+						System.exit(1);
+					}
+					
+					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					Fortnox4JClient cl = new Fortnox4JClient(ci);
+					
+					FortnoxClientInfo ciDst = cli.parseDestAuthDetails(cmd);
+					Fortnox4JClient clDst = new Fortnox4JClient(ciDst);
+					
+					int copied = FortnoxUtil.copyCustomerInvoices(
+							cl.getClient(), 
+							clDst.getClient(), 
+							fromDate, 
+							untilDate, 
+							os);
+					os.println(copied + " invoices copied.");
 					
 				} else if (CMD_GETCUSTOMERLIST.equalsIgnoreCase(cmdLine)) {
 
