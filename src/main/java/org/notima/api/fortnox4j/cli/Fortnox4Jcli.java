@@ -51,8 +51,10 @@ public class Fortnox4Jcli {
 	public static final String CMD_GETACCESSTOKEN = "getAccessToken";
 	public static final String CMD_GETCUSTOMERLIST = "getCustomerList";
 	public static final String CMD_LISTUNPAID_CUSTOMER_INVOICES = "listUnpaidCustomerInvoices";
+	public static final String CMD_LISTUNBOOKED_CUSTOMER_INVOICES = "listUnbookedCustomerInvoices";
 	public static final String CMD_LIST_ALL_CUSTOMER_INVOICES = "listCustomerInvoices";
 	public static final String CMD_COPY_INVOICES = "copyInvoices";
+	public static final String CMD_GET_LOCKED_PERIOD = "getLockedPeriod";
 	
 	/**
 	 * Parse auth details from command line.
@@ -121,7 +123,14 @@ public class Fortnox4Jcli {
 		Fortnox4Jcli cli = new Fortnox4Jcli();
 		
 		Options opts = new Options();
-		opts.addOption("c", "cmd", true, "Command. Available commands: getAccessToken, getCustomerList, listUnpaidCustomerInvoices, listCustomerInvoices copyInvoices");
+		opts.addOption("c", "cmd", true, "Command. Available commands: "
+				+ CMD_GETACCESSTOKEN + ", "  
+				+ CMD_GETCUSTOMERLIST + ", " 
+				+ CMD_LISTUNPAID_CUSTOMER_INVOICES + ", " 
+				+ CMD_LISTUNBOOKED_CUSTOMER_INVOICES + ", " 
+				+ CMD_LIST_ALL_CUSTOMER_INVOICES + ", " 
+				+ CMD_COPY_INVOICES + ", "
+				+ CMD_GET_LOCKED_PERIOD);
 		opts.addOption("s", true, "Client Secret. This is the integrator's secret word.");
 		opts.addOption("a", "apicode", true, "The API-code recieved from the Fortnox client when adding the integration. Must be combined with -s");
 		opts.addOption("t", "accesstoken", true, "The access token to the Fortnox client");
@@ -241,6 +250,31 @@ public class Fortnox4Jcli {
 					} else {
 						System.out.println("No unpaid customer invoices.");
 					}
+				} else if (CMD_LISTUNBOOKED_CUSTOMER_INVOICES.equalsIgnoreCase(cmdLine)) {
+					
+					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					Fortnox4JClient cl = new Fortnox4JClient(ci);
+					outputFormat.setFortnox4JClient(cl);
+					
+					Invoices invoices = cl.getClient().getInvoices(FortnoxClient3.FILTER_UNBOOKED);
+					
+					if (invoices!=null && invoices.getInvoiceSubset()!=null) {
+
+						if (cmd.hasOption("enrich")) {
+							outputFormat.reportCustomerInvoices(invoices);
+						} else {
+							outputFormat.reportCustomerInvoicesCompact(invoices);
+						}
+						List<StringBuffer> out = outputFormat.writeResult();
+						for (StringBuffer b : out) {
+							os.println(b.toString());
+						}
+						
+					} else {
+						System.out.println("No unbooked customer invoices.");
+					}
+					
+					
 				} else if (CMD_LIST_ALL_CUSTOMER_INVOICES.equalsIgnoreCase(cmdLine)) {
 					
 					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
@@ -294,9 +328,19 @@ public class Fortnox4Jcli {
 				} else if (CMD_GETCUSTOMERLIST.equalsIgnoreCase(cmdLine)) {
 
 					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
-					
 					Fortnox4JClient cl = new Fortnox4JClient(ci);
 					cl.getCustomerList(os);
+					
+				} else if (CMD_GET_LOCKED_PERIOD.equalsIgnoreCase(cmdLine)) {
+					
+					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					Fortnox4JClient cl = new Fortnox4JClient(ci);
+					Date lockedUntil = cl.getClient().getLockedPeriodUntil();
+					if (lockedUntil == null) {
+						os.println("No locked period found.");
+					} else {
+						os.println("Period locked until " + FortnoxClient3.s_dfmt.format(lockedUntil));
+					}
 
 				} else if (cmd.hasOption("i")) {
 					
