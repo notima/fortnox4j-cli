@@ -54,6 +54,7 @@ public class Fortnox4Jcli {
 	public static final String CMD_LISTUNBOOKED_CUSTOMER_INVOICES = "listUnbookedCustomerInvoices";
 	public static final String CMD_LIST_ALL_CUSTOMER_INVOICES = "listCustomerInvoices";
 	public static final String CMD_COPY_INVOICES = "copyInvoices";
+	public static final String CMD_COPY_UNPAID_AND_UNBOOKED_INVOICES = "copyUnpaidAndUnbookedInvoices";
 	public static final String CMD_GET_LOCKED_PERIOD = "getLockedPeriod";
 	
 	/**
@@ -130,6 +131,7 @@ public class Fortnox4Jcli {
 				+ CMD_LISTUNBOOKED_CUSTOMER_INVOICES + ", " 
 				+ CMD_LIST_ALL_CUSTOMER_INVOICES + ", " 
 				+ CMD_COPY_INVOICES + ", "
+				+ CMD_COPY_UNPAID_AND_UNBOOKED_INVOICES + ", "
 				+ CMD_GET_LOCKED_PERIOD);
 		opts.addOption("s", true, "Client Secret. This is the integrator's secret word.");
 		opts.addOption("a", "apicode", true, "The API-code recieved from the Fortnox client when adding the integration. Must be combined with -s");
@@ -323,6 +325,24 @@ public class Fortnox4Jcli {
 							fromDate, 
 							untilDate, 
 							os);
+					os.println(copied + " invoices copied.");
+					
+				} else if (CMD_COPY_UNPAID_AND_UNBOOKED_INVOICES.equalsIgnoreCase(cmdLine)) {
+					
+					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					Fortnox4JClient cl = new Fortnox4JClient(ci);
+					
+					FortnoxClientInfo ciDst = cli.parseDestAuthDetails(cmd);
+					Fortnox4JClient clDst = new Fortnox4JClient(ciDst);
+
+					Invoices invoices = cl.getClient().getUnpaidAndUnbookedCustomerInvoices();
+					
+					int copied = FortnoxUtil.copyCustomerInvoices(
+							cl.getClient(), 
+							clDst.getClient(), 
+							invoices, 
+							os);
+					
 					os.println(copied + " invoices copied.");
 					
 				} else if (CMD_GETCUSTOMERLIST.equalsIgnoreCase(cmdLine)) {

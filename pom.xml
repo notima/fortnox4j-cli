@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.notima.api</groupId>
 	<artifactId>fortnox4j-cli</artifactId>
-	<version>0.0.2</version>
+	<version>0.0.3-SNAPSHOT</version>
 	<name>Fortnox4J Command Line Interface</name>
 	<description>Simple CLI for interacting with Fortnox.</description>
 	<url>https://github.com/notima/fortnox4j-cli</url>
@@ -32,7 +32,7 @@
 		<dependency>
 			<groupId>org.notima.api</groupId>
 			<artifactId>fortnox4j</artifactId>
-			<version>1.8.8</version>
+			<version>1.8.9-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
