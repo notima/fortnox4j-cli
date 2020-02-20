@@ -38,6 +38,8 @@ import org.notima.api.fortnox.FortnoxClient3;
 import org.notima.api.fortnox.FortnoxException;
 import org.notima.api.fortnox.FortnoxUtil;
 import org.notima.api.fortnox.clients.FortnoxClientInfo;
+import org.notima.api.fortnox.clients.FortnoxClientList;
+import org.notima.api.fortnox.entities3.FinancialYearSubset;
 import org.notima.api.fortnox.entities3.Invoices;
 
 /**
@@ -56,6 +58,7 @@ public class Fortnox4Jcli {
 	public static final String CMD_COPY_INVOICES = "copyInvoices";
 	public static final String CMD_COPY_UNPAID_AND_UNBOOKED_INVOICES = "copyUnpaidAndUnbookedInvoices";
 	public static final String CMD_GET_LOCKED_PERIOD = "getLockedPeriod";
+	public static final String CMD_GET_SIE4 = "getSie4";
 	
 	/**
 	 * Parse auth details from command line.
@@ -124,6 +127,8 @@ public class Fortnox4Jcli {
 		Fortnox4Jcli cli = new Fortnox4Jcli();
 		
 		Options opts = new Options();
+		opts.addOption("f", true, "Client file. A file containing credentials");
+		opts.addOption("orgNo", true, "The org number to use when determining what credentials to use from the client file. If omitted, the first client is used.");
 		opts.addOption("c", "cmd", true, "Command. Available commands: "
 				+ CMD_GETACCESSTOKEN + ", "  
 				+ CMD_GETCUSTOMERLIST + ", " 
@@ -132,7 +137,8 @@ public class Fortnox4Jcli {
 				+ CMD_LIST_ALL_CUSTOMER_INVOICES + ", " 
 				+ CMD_COPY_INVOICES + ", "
 				+ CMD_COPY_UNPAID_AND_UNBOOKED_INVOICES + ", "
-				+ CMD_GET_LOCKED_PERIOD);
+				+ CMD_GET_LOCKED_PERIOD + ", "
+				+ CMD_GET_SIE4);
 		opts.addOption("s", true, "Client Secret. This is the integrator's secret word.");
 		opts.addOption("a", "apicode", true, "The API-code recieved from the Fortnox client when adding the integration. Must be combined with -s");
 		opts.addOption("t", "accesstoken", true, "The access token to the Fortnox client");
@@ -154,6 +160,11 @@ public class Fortnox4Jcli {
 		
 		Date fromDate = null;
 		Date untilDate = null;
+		String fortnoxClientFile = null;
+		String orgNo = null;
+		FortnoxClientList clist = null;
+		FortnoxClientInfo ci = null;
+		File destinationFile = null;
 		
 		try {
 			
@@ -170,6 +181,23 @@ public class Fortnox4Jcli {
 				}
 			}
 
+			if (cmd.hasOption("f")) {
+				fortnoxClientFile = cmd.getOptionValue("f");
+			}
+			
+			if (cmd.hasOption("orgNo")) {
+				orgNo = cmd.getOptionValue("orgNo");
+			}
+			
+			if (fortnoxClientFile!=null) {
+				clist = FortnoxUtil.readFortnoxClientListFromFile(fortnoxClientFile);
+				if (orgNo!=null) {
+					ci = clist.getClientInfoByOrgNo(orgNo);
+				} else {
+					ci = clist.getFirstClient();
+				}
+			}
+			
 			if (cmd.hasOption("d")) {
 				fromDate = FortnoxClient3.s_dfmt.parse(cmd.getOptionValue("d"));
 			}
@@ -179,7 +207,7 @@ public class Fortnox4Jcli {
 			}
 			
 			if (cmd.hasOption("o")) {
-				File destinationFile = new File(cmd.getOptionValue("o"));
+				destinationFile = new File(cmd.getOptionValue("o"));
 				os = new PrintStream(new FileOutputStream(destinationFile));
 			}
 			
@@ -231,7 +259,9 @@ public class Fortnox4Jcli {
 					
 				} else if (CMD_LISTUNPAID_CUSTOMER_INVOICES.equalsIgnoreCase(cmdLine)) {
 
-					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					if (ci==null) 
+						ci = cli.parseAuthDetails(cmd);
+					
 					Fortnox4JClient cl = new Fortnox4JClient(ci);
 					outputFormat.setFortnox4JClient(cl);
 					
@@ -254,7 +284,9 @@ public class Fortnox4Jcli {
 					}
 				} else if (CMD_LISTUNBOOKED_CUSTOMER_INVOICES.equalsIgnoreCase(cmdLine)) {
 					
-					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					if (ci==null) 
+						ci = cli.parseAuthDetails(cmd);
+
 					Fortnox4JClient cl = new Fortnox4JClient(ci);
 					outputFormat.setFortnox4JClient(cl);
 					
@@ -279,7 +311,9 @@ public class Fortnox4Jcli {
 					
 				} else if (CMD_LIST_ALL_CUSTOMER_INVOICES.equalsIgnoreCase(cmdLine)) {
 					
-					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					if (ci==null) 
+						ci = cli.parseAuthDetails(cmd);
+					
 					Fortnox4JClient cl = new Fortnox4JClient(ci);
 					outputFormat.setFortnox4JClient(cl);
 					
@@ -313,7 +347,9 @@ public class Fortnox4Jcli {
 						System.exit(1);
 					}
 					
-					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					if (ci==null) 
+						ci = cli.parseAuthDetails(cmd);
+					
 					Fortnox4JClient cl = new Fortnox4JClient(ci);
 					
 					FortnoxClientInfo ciDst = cli.parseDestAuthDetails(cmd);
@@ -329,7 +365,9 @@ public class Fortnox4Jcli {
 					
 				} else if (CMD_COPY_UNPAID_AND_UNBOOKED_INVOICES.equalsIgnoreCase(cmdLine)) {
 					
-					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					if (ci==null) 
+						ci = cli.parseAuthDetails(cmd);
+					
 					Fortnox4JClient cl = new Fortnox4JClient(ci);
 					
 					FortnoxClientInfo ciDst = cli.parseDestAuthDetails(cmd);
@@ -347,13 +385,17 @@ public class Fortnox4Jcli {
 					
 				} else if (CMD_GETCUSTOMERLIST.equalsIgnoreCase(cmdLine)) {
 
-					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					if (ci==null) 
+						ci = cli.parseAuthDetails(cmd);
+
 					Fortnox4JClient cl = new Fortnox4JClient(ci);
 					cl.getCustomerList(os);
 					
 				} else if (CMD_GET_LOCKED_PERIOD.equalsIgnoreCase(cmdLine)) {
 					
-					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					if (ci==null) 
+						ci = cli.parseAuthDetails(cmd);
+					
 					Fortnox4JClient cl = new Fortnox4JClient(ci);
 					Date lockedUntil = cl.getClient().getLockedPeriodUntil();
 					if (lockedUntil == null) {
@@ -362,10 +404,36 @@ public class Fortnox4Jcli {
 						os.println("Period locked until " + FortnoxClient3.s_dfmt.format(lockedUntil));
 					}
 
+				} else if (CMD_GET_SIE4.equalsIgnoreCase(cmdLine)) {
+
+					if (fromDate==null) {
+						System.out.println("Parameter --fromdate is missing");
+						System.exit(1);
+					}
+					
+					if (ci==null) 
+						ci = cli.parseAuthDetails(cmd);
+					
+					Fortnox4JClient cl = new Fortnox4JClient(ci);
+					
+					FinancialYearSubset fs = cl.getClient().getFinancialYear(fromDate);
+					int yearId = fs.getId();
+					
+					StringBuffer sieContent = cl.getClient().retrieveSieFile(4, yearId);
+
+					os.print(sieContent);
+					
+					if (os!=System.out) {
+						System.out.println("SIE4 file saved to " + destinationFile.getAbsolutePath());
+					}
+					
+					
 				} else if (cmd.hasOption("i")) {
 					
 					String invoiceNo = cmd.getOptionValue("i");
-					FortnoxClientInfo ci = cli.parseAuthDetails(cmd);
+					if (ci==null) 
+						ci = cli.parseAuthDetails(cmd);
+					
 					Fortnox4JClient cl = new Fortnox4JClient(ci);
 					cl.printInvoice(os, invoiceNo);
 					
