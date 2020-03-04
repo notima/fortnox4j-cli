@@ -9,7 +9,7 @@ This project depends on [fortnox4j](https://github.com/notima/fortnoxj), which m
 Get access token from API-code
 
 ```
-Fortnox4jcli -a [accessToken] -s [clientSecret]
+Fortnox4jcli -a [apiCode] -s [clientSecret]
 ```
 
 General usage
