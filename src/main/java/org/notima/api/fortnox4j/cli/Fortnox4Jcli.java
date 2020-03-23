@@ -27,6 +27,7 @@ import java.util.Date;
  */
 
 import java.util.List;
+import java.util.Scanner;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -39,6 +40,7 @@ import org.notima.api.fortnox.FortnoxException;
 import org.notima.api.fortnox.FortnoxUtil;
 import org.notima.api.fortnox.clients.FortnoxClientInfo;
 import org.notima.api.fortnox.clients.FortnoxClientList;
+import org.notima.api.fortnox.entities3.CompanySetting;
 import org.notima.api.fortnox.entities3.FinancialYearSubset;
 import org.notima.api.fortnox.entities3.Invoices;
 
@@ -354,6 +356,18 @@ public class Fortnox4Jcli {
 					
 					FortnoxClientInfo ciDst = cli.parseDestAuthDetails(cmd);
 					Fortnox4JClient clDst = new Fortnox4JClient(ciDst);
+
+					CompanySetting srcCompany = cl.getClient().getCompanySetting();
+					CompanySetting dstCompany = clDst.getClient().getCompanySetting();
+					System.out.print("Copy from [" + srcCompany.getOrganizationNumber() + "] " + srcCompany.getName() + " to [");
+					System.out.println(dstCompany.getOrganizationNumber() + "] " + dstCompany.getName() + "(y/n) ?");
+					Scanner scanner = new Scanner(System.in);
+					String reply = scanner.next();
+					scanner.close();
+					if (!reply.toLowerCase().startsWith("y")) {
+						os.println("Operation cancelled.");
+						return;
+					}
 					
 					int copied = FortnoxUtil.copyCustomerInvoices(
 							cl.getClient(), 
