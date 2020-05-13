@@ -3,6 +3,7 @@ package org.notima.api.fortnox4j.cli;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.nio.ByteBuffer;
 import java.util.Date;
 
 /**
@@ -433,9 +434,8 @@ public class Fortnox4Jcli {
 					FinancialYearSubset fs = cl.getClient().getFinancialYear(fromDate);
 					int yearId = fs.getId();
 					
-					StringBuffer sieContent = cl.getClient().retrieveSieFile(4, yearId);
-
-					os.print(sieContent);
+					ByteBuffer sieContent = cl.getClient().retrieveSieFile(4, yearId);
+					os.write(sieContent.array());
 					
 					if (os!=System.out) {
 						System.out.println("SIE4 file saved to " + destinationFile.getAbsolutePath());
