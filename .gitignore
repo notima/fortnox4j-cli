@@ -27,3 +27,5 @@ hs_err_pid*
 .project
 .settings
 *.xlsx
+*.se
+*.si

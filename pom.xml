@@ -15,6 +15,18 @@
 	</properties>
 
 	<build>
+	
+		<resources>
+			<resource>
+				<directory>**</directory>
+				<excludes>
+					<exclude>*.si</exclude>
+					<exclude>*.se</exclude>
+					<exclude>*.xls*</exclude>
+				</excludes>
+			</resource>
+		</resources>	
+	
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
